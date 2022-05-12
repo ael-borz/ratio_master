@@ -1,40 +1,43 @@
 use std::fmt::Display;
 
-/// TODO : Better suited types
-pub struct TorrentData {
-    hash: String,
-    peer_id: Vec<u8>,
-    port: u16,
-    downloaded: u32,
-    uploaded: u32,
-    left: u32,
-    compact: bool,
-    numwant: u8,
-    event: Event,
-    key: String,
-}
+use rand::{Rng, thread_rng, distributions::Alphanumeric};
 
-impl TorrentData {
-    pub fn new(hash: String, size: u32) -> Self {
-        let peer_id: Vec<u8> = vec![0]; // TODO : Generate random
-        let port: u16 = 12828; // TODO : Generate random
-        let numwant: u8 = 200; // TODO : User input ?
-        let key = String::from("34A687C0"); // TODO : Generate random hex ?
-        
-        TorrentData {
-            hash,
-            peer_id,
-            port,
-            downloaded: 0,
-            uploaded: 0,
-            left: size,
-            compact: true,
-            numwant,
-            event: Event::Started,
-            key,
-        }
+
+/// Generates a new peer_id specific to the desired Bittorent client (20 bytes)
+/// 
+/// Example : qBittorrent Peer ID is formatted as follows: -qBXYZ0-<12 random bytes>
+/// Where:
+///
+/// * X is the major version number
+/// * Y is the minor version number
+/// * Z is the bugfix version number (in hexadecimal so that we can go up to 15)
+///
+/// For example, we would have the following Peer IDs for these versions:
+///
+/// * qBittorrent v2.4.10: -qB24A0-<12 random bytes>
+/// * qBittorrent v3.0.2: -qB3020-<12 random bytes>
+pub fn generate_client_peer_id(client_name: &str) -> String {
+    let rand_string: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(12)
+        .map(char::from)
+        .collect();
+
+    match client_name {
+        "qbittorent" => format!("{}{}", "-qB4420-", rand_string),
+        _ => format!("{}{}", "-qB4420-", rand_string)
     }
 }
+
+pub fn generate_key() -> String {
+    let rand_string: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(8)
+        .map(char::from)
+        .collect();
+    rand_string
+}
+
 
 enum Event {
     Started,
