@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, collections::HashMap};
 
 use rand::{Rng, thread_rng, distributions::Alphanumeric};
 
@@ -38,19 +38,33 @@ pub fn generate_key() -> String {
     rand_string
 }
 
-
-enum Event {
-    Started,
-    Stopped,
-    Completed,
+#[derive(Debug, Default)]
+pub struct FakeClient {
+    pub downloaded: u32,
+    pub uploaded: u32
 }
 
-impl Display for Event {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Event::Started => f.write_str("started"),
-            Event::Stopped => f.write_str("stopped"),
-            Event::Completed => f.write_str("completed"),
-        }
+impl FakeClient {
+    /// TODO : Add random bytes
+    pub fn seed_and_leech(&mut self, seed_rate: u32, leech_rate: u32) {
+        self.downloaded += leech_rate;
+        self.uploaded += seed_rate;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_client_peer_id_correct_len() {
+        let generated_peer_id = generate_client_peer_id("qbittorent");
+        assert_eq!(generated_peer_id.len(), 20);
+    }
+
+    #[test]
+    fn test_generate_key_correct_len() {
+        let generated_key = generate_key();
+        assert_eq!(generated_key.len(), 8);
     }
 }
