@@ -1,5 +1,5 @@
 use core::time;
-use std::{collections::HashMap, fmt::Display, thread, io::Write};
+use std::{collections::HashMap, fmt::Display, io::Write, thread};
 
 use lava_torrent::torrent::v1::Torrent;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -121,14 +121,19 @@ impl FakeClient {
     }
 
     /// Simulates seeding & leeching
-    /// 
+    ///
     /// Rates are exprimed in KB/s
     pub fn seed_and_leech(&mut self, seed_rate: u32, leech_rate: u32) {
         self.downloaded += leech_rate;
         self.uploaded += seed_rate;
     }
 
-    pub async fn run(&mut self, update_rate: u64, seed_rate: u32, leech_rate: u32) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn run(
+        &mut self,
+        update_rate: u64,
+        seed_rate: u32,
+        leech_rate: u32,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.send_request().await?; // Handshake
         let mut elapsed_seconds = 0;
         loop {
@@ -150,7 +155,10 @@ impl FakeClient {
     }
 
     fn show_progression(&self) {
-        print!("\rdownloaded: {}kB | uploaded: {}kB", self.downloaded, self.uploaded);
+        print!(
+            "\rdownloaded: {}kB | uploaded: {}kB",
+            self.downloaded, self.uploaded
+        );
         std::io::stdout().flush().expect("Flush failed");
     }
 

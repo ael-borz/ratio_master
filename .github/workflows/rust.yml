@@ -19,7 +19,7 @@ jobs:
     - name: Build
       run: cargo build --release --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --release --verbose
     - name: Upload to release (Linux bin)
       uses: JasonEtco/upload-to-release@master
       with:

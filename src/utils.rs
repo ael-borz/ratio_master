@@ -1,5 +1,3 @@
-use std::str::Chars;
-
 pub fn percent_encode(param: &[u8]) -> String {
     let mut percent_encoded = String::with_capacity(50);
     for byte in param {
@@ -16,18 +14,21 @@ pub fn percent_encode(param: &[u8]) -> String {
 pub fn percent_decode(param: &[u8]) -> Vec<u8> {
     let mut percent_decoded = Vec::with_capacity(50);
     let mut cursor = 0;
-    
+
     while let Some(param_char) = param.get(cursor) {
         cursor += 1;
         match param_char {
             b'%' => {
                 let hex_val = hex::decode(
-                    param.get(cursor..cursor+2).expect("Failed to get next 2 bytes")
-                ).expect("Failed to decode hex");
+                    param
+                        .get(cursor..cursor + 2)
+                        .expect("Failed to get next 2 bytes"),
+                )
+                .expect("Failed to decode hex");
                 cursor += 2;
                 percent_decoded.extend(hex_val);
             }
-            _ => percent_decoded.push(*param_char)
+            _ => percent_decoded.push(*param_char),
         }
     }
 
@@ -36,7 +37,7 @@ pub fn percent_decode(param: &[u8]) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::{percent_encode, percent_decode};
+    use super::{percent_decode, percent_encode};
 
     #[test]
     fn test_percent_encode() {
