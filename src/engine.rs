@@ -7,7 +7,7 @@ use reqwest::Client;
 
 use crate::{
     network::{build_client, build_url},
-    utils::url_encode,
+    utils::percent_encode,
 };
 
 /// Generates a new peer_id specific to the desired Bittorent client (20 bytes)
@@ -29,7 +29,7 @@ pub fn generate_client_peer_id(client_name: &str) -> String {
         .take(12)
         .collect();
 
-    let url_encoded_rand_bytes = url_encode(&rand_bytes);
+    let url_encoded_rand_bytes = percent_encode(&rand_bytes);
 
     match client_name {
         "qbittorent" => format!("{}{}", "-qB4420-", url_encoded_rand_bytes),
@@ -79,7 +79,7 @@ pub struct FakeClient {
 impl FakeClient {
     pub fn new(torrent: &Torrent) -> Self {
         let mut params: HashMap<&'static str, String> = HashMap::with_capacity(NUMBER_OF_PARAMS);
-        params.insert("info_hash", url_encode(&torrent.info_hash_bytes()));
+        params.insert("info_hash", percent_encode(&torrent.info_hash_bytes()));
         params.insert("peer_id", generate_client_peer_id("qbittorent"));
         params.insert("port", String::from("12828"));
         params.insert("uploaded", String::from("0"));
@@ -176,12 +176,14 @@ impl FakeClient {
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::percent_decode;
+
     use super::*;
 
     #[test]
     fn test_generate_client_peer_id_correct_len() {
         let generated_peer_id = generate_client_peer_id("qbittorent");
-        assert_eq!(generated_peer_id.len(), 20);
+        assert_eq!(percent_decode(generated_peer_id.as_bytes()).len(), 20);
     }
 
     #[test]

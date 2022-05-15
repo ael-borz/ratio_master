@@ -11,7 +11,7 @@
 
 use clap::StructOpt;
 use lava_torrent::torrent::v1::Torrent;
-use ratiomaster::{cli_parser::Args, engine::FakeClient, utils::url_encode};
+use ratiomaster::{cli_parser::Args, engine::FakeClient, utils::percent_encode};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let leech_rate = args.leech_rate.unwrap_or(0) * 1024;
 
     let hash_bytes = torrent.info_hash_bytes();
-    println!("{:?} => {}", hash_bytes, url_encode(&hash_bytes));
+    println!("{:?} => {}", hash_bytes, percent_encode(&hash_bytes));
 
     let mut fake_client = FakeClient::new(&torrent);
     println!("{:?}", fake_client.params);
