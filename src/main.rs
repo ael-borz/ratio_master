@@ -1,4 +1,3 @@
-
 /* TODO :
 * Read .torrent file and extract relevant data (tracker URL, hash, size, nb of seeders/leechers)
 * Read config file if exists
@@ -10,40 +9,25 @@
 * Send simulated data to tracker URL after gathering 30mn of data OR on user manual request
 */
 
-use core::time;
-use std::{collections::HashMap, hash::Hash, thread, time::Duration, ops::Add};
-
 use clap::StructOpt;
 use lava_torrent::torrent::v1::Torrent;
-use ratiomaster::{cli_parser::Args, network::{update_tracker, set_initial_params, build_url, update_params}, engine::{FakeClient}};
-
-const NUMBER_OF_PARAMS: usize = 10;
-const UPDATE_RATE: u64 = 5; // Seconds
+use ratiomaster::{cli_parser::Args, engine::FakeClient, utils::url_encode};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    
+
     let torrent = Torrent::read_from_file(args.torrent_file_path)?;
-   
-    let mut params: HashMap<&'static str, String> = HashMap::with_capacity(NUMBER_OF_PARAMS);
-    set_initial_params(&mut params, &torrent);
+    let update_date = args.update_rate.unwrap_or(60); // 1mn
+    let seed_rate = args.seed_rate.unwrap_or(1000) * 1024;
+    let leech_rate = args.leech_rate.unwrap_or(0) * 1024;
 
-    let base_url = torrent.announce.expect("Tracker URL not found");
+    let hash_bytes = torrent.info_hash_bytes();
+    println!("{:?} => {}", hash_bytes, url_encode(&hash_bytes));
 
-    let mut fake_client = FakeClient::default();
-    let mut elapsed_seconds = 0;
-    loop {
-        thread::sleep(time::Duration::from_secs(1));
-        elapsed_seconds += 1;
-        fake_client.seed_and_leech(10, 20);
-        println!("downloaded: {}kB | uploaded: {}kB", fake_client.downloaded, fake_client.uploaded);
-        if elapsed_seconds == UPDATE_RATE {
-            update_params(&mut params, &fake_client);
-            let url = build_url(&base_url, &params).expect("Failed to build url with params");
-            println!("Sending request : {}", url);
-            // update_tracker(url);
-            elapsed_seconds = 0;
-        }
-    }
+    let mut fake_client = FakeClient::new(&torrent);
+    println!("{:?}", fake_client.params);
+    fake_client.run(update_date, seed_rate, leech_rate).await?;
+
+    Ok(())
 }
